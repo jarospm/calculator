@@ -2,6 +2,39 @@
 let firstNumber = null;
 let operator = null;
 let secondNumber = null;
+let displayValue = '0';
+
+// Function to update the display
+function updateDisplay() {
+    const display = document.querySelector('.display');
+    display.textContent = displayValue;
+}
+
+// Function to handle digit input
+function inputDigit(digit) {
+    if (displayValue === '0') {
+        displayValue = digit;
+    } else {
+        displayValue += digit;
+    }
+    updateDisplay();
+}
+
+// Add event listeners when the document is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Get all number buttons (excluding operators and special buttons)
+    const digitButtons = document.querySelectorAll('.buttons button:not(.operator):not(.clear):not(.equals)');
+    
+    // Add click handlers to each digit button
+    digitButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            inputDigit(button.textContent);
+        });
+    });
+
+    // Initialize display
+    updateDisplay();
+});
 
 // Basic arithmetic functions
 
