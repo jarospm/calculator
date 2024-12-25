@@ -8,7 +8,9 @@ function add(a, b) { return a + b; }
 function subtract(a, b) { return a - b; }
 function multiply(a, b) { return a * b; }
 function divide(a, b) {
-    if (b === 0) throw new Error("Cannot divide by zero!");
+    if (b === 0) {
+        throw new Error("Sorry, no can do!");
+    }
     return a / b;
 }
 
@@ -32,6 +34,7 @@ let operator = null;
 let secondNumber = null;
 let displayValue = '0';
 let waitingForSecondNumber = false;
+let justCompletedOperation = false;
 
 // 3. UI INTERACTION FUNCTIONS
 // These functions handle user interactions and update the display
@@ -42,9 +45,10 @@ function updateDisplay() {
 }
 
 function inputDigit(digit) {
-    if (waitingForSecondNumber) {
+    if (waitingForSecondNumber || justCompletedOperation) {
         displayValue = digit;
         waitingForSecondNumber = false;
+        justCompletedOperation = false;
     } else {
         if (displayValue === '0') {
             displayValue = digit;
@@ -59,15 +63,25 @@ function handleOperator(nextOperator) {
     const inputValue = parseFloat(displayValue);
     
     if (firstNumber === null) {
+        // First number being entered
         firstNumber = inputValue;
-    } else if (operator) {
-        const result = operate(operator, firstNumber, inputValue);
-        displayValue = String(result);
-        firstNumber = result;
+        waitingForSecondNumber = true;
+    } else if (operator && !waitingForSecondNumber) {
+        // We have both numbers and an operator, safe to calculate
+        try {
+            const result = operate(operator, firstNumber, inputValue);
+            displayValue = String(result);
+            firstNumber = result;
+            justCompletedOperation = true;
+        } catch (error) {
+            displayValue = error.message;
+            firstNumber = null;
+            justCompletedOperation = true;
+        }
         updateDisplay();
+        waitingForSecondNumber = true;
     }
-    
-    waitingForSecondNumber = true;
+    // Update the operator regardless
     operator = nextOperator;
 }
 
@@ -75,12 +89,17 @@ function handleEquals() {
     const inputValue = parseFloat(displayValue);
     
     if (operator && firstNumber !== null) {
-        const result = operate(operator, firstNumber, inputValue);
-        displayValue = String(result);
+        try {
+            const result = operate(operator, firstNumber, inputValue);
+            displayValue = String(result);
+        } catch (error) {
+            displayValue = error.message;
+        }
         // Reset the calculator state
         firstNumber = null;
         operator = null;
         waitingForSecondNumber = false;
+        justCompletedOperation = true;
         updateDisplay();
     }
 }
@@ -90,7 +109,44 @@ function handleClear() {
     firstNumber = null;
     operator = null;
     waitingForSecondNumber = false;
+    justCompletedOperation = false;
     updateDisplay();
+}
+
+function handleBackspace() {
+    if (displayValue.length > 1) {
+        displayValue = displayValue.slice(0, -1);
+    } else {
+        displayValue = '0';
+    }
+    updateDisplay();
+}
+
+function handleKeyboardInput(e) {
+    // Numbers (both main keyboard and numpad)
+    if ((e.key >= '0' && e.key <= '9')) {
+        inputDigit(e.key);
+    }
+    
+    // Operators
+    if (['+', '-', '*', '/'].includes(e.key)) {
+        handleOperator(e.key);
+    }
+    
+    // Enter or = for equals
+    if (e.key === 'Enter' || e.key === '=') {
+        handleEquals();
+    }
+    
+    // Escape or Delete for clear
+    if (e.key === 'Escape' || e.key === 'Delete') {
+        handleClear();
+    }
+    
+    // Add backspace handler
+    if (e.key === 'Backspace') {
+        handleBackspace();
+    }
 }
 
 // 4. EVENT LISTENERS
@@ -121,6 +177,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add clear button handler
     const clearButton = document.querySelector('.clear');
     clearButton.addEventListener('click', handleClear);
+
+    // Add backspace button handler
+    const backspaceButton = document.querySelector('.backspace');
+    backspaceButton.addEventListener('click', handleBackspace);
+
+    // Add keyboard support
+    document.addEventListener('keydown', handleKeyboardInput);
 
     // Initialize display
     updateDisplay();
