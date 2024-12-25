@@ -122,6 +122,14 @@ function handleBackspace() {
     updateDisplay();
 }
 
+function inputDecimal() {
+    // Don't add decimal if one already exists
+    if (!displayValue.includes('.')) {
+        displayValue += '.';
+        updateDisplay();
+    }
+}
+
 function handleKeyboardInput(e) {
     // Numbers (both main keyboard and numpad)
     if ((e.key >= '0' && e.key <= '9')) {
@@ -146,6 +154,11 @@ function handleKeyboardInput(e) {
     // Add backspace handler
     if (e.key === 'Backspace') {
         handleBackspace();
+    }
+    
+    // Add decimal handler
+    if (e.key === '.') {
+        inputDecimal();
     }
 }
 
@@ -181,6 +194,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add backspace button handler
     const backspaceButton = document.querySelector('.backspace');
     backspaceButton.addEventListener('click', handleBackspace);
+
+    // Add decimal button handler
+    const decimalButton = document.querySelector('.decimal');
+    decimalButton.addEventListener('click', inputDecimal);
 
     // Add keyboard support
     document.addEventListener('keydown', handleKeyboardInput);
