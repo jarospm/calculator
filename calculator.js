@@ -1,26 +1,100 @@
-// Variables to store the calculator operation
+// 1. CORE CALCULATOR LOGIC
+// These are the fundamental operations our calculator can perform
+
+/**
+ * Basic arithmetic functions
+ */
+function add(a, b) { return a + b; }
+function subtract(a, b) { return a - b; }
+function multiply(a, b) { return a * b; }
+function divide(a, b) {
+    if (b === 0) throw new Error("Cannot divide by zero!");
+    return a / b;
+}
+
+/**
+ * Main operation handler - converts operator symbols to actions
+ */
+function operate(operator, a, b) {
+    switch(operator) {
+        case '+': return add(a, b);
+        case '-': return subtract(a, b);
+        case '*': return multiply(a, b);
+        case '/': return divide(a, b);
+        default: throw new Error('Invalid operator');
+    }
+}
+
+// 2. CALCULATOR STATE
+// These variables track the calculator's current state
 let firstNumber = null;
 let operator = null;
 let secondNumber = null;
 let displayValue = '0';
+let waitingForSecondNumber = false;
 
-// Function to update the display
+// 3. UI INTERACTION FUNCTIONS
+// These functions handle user interactions and update the display
+
 function updateDisplay() {
     const display = document.querySelector('.display');
     display.textContent = displayValue;
 }
 
-// Function to handle digit input
 function inputDigit(digit) {
-    if (displayValue === '0') {
+    if (waitingForSecondNumber) {
         displayValue = digit;
+        waitingForSecondNumber = false;
     } else {
-        displayValue += digit;
+        if (displayValue === '0') {
+            displayValue = digit;
+        } else {
+            displayValue += digit;
+        }
     }
     updateDisplay();
 }
 
-// Add event listeners when the document is loaded
+function handleOperator(nextOperator) {
+    const inputValue = parseFloat(displayValue);
+    
+    if (firstNumber === null) {
+        firstNumber = inputValue;
+    } else if (operator) {
+        const result = operate(operator, firstNumber, inputValue);
+        displayValue = String(result);
+        firstNumber = result;
+        updateDisplay();
+    }
+    
+    waitingForSecondNumber = true;
+    operator = nextOperator;
+}
+
+function handleEquals() {
+    const inputValue = parseFloat(displayValue);
+    
+    if (operator && firstNumber !== null) {
+        const result = operate(operator, firstNumber, inputValue);
+        displayValue = String(result);
+        // Reset the calculator state
+        firstNumber = null;
+        operator = null;
+        waitingForSecondNumber = false;
+        updateDisplay();
+    }
+}
+
+function handleClear() {
+    displayValue = '0';
+    firstNumber = null;
+    operator = null;
+    waitingForSecondNumber = false;
+    updateDisplay();
+}
+
+// 4. EVENT LISTENERS
+// Wire up the UI elements to our handler functions
 document.addEventListener('DOMContentLoaded', () => {
     // Get all number buttons (excluding operators and special buttons)
     const digitButtons = document.querySelectorAll('.buttons button:not(.operator):not(.clear):not(.equals)');
@@ -32,75 +106,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Add operator button handlers
+    const operatorButtons = document.querySelectorAll('.operator');
+    operatorButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            handleOperator(button.textContent);
+        });
+    });
+
+    // Add equals button handler
+    const equalsButton = document.querySelector('.equals');
+    equalsButton.addEventListener('click', handleEquals);
+
+    // Add clear button handler
+    const clearButton = document.querySelector('.clear');
+    clearButton.addEventListener('click', handleClear);
+
     // Initialize display
     updateDisplay();
-});
-
-// Basic arithmetic functions
-
-/**
- * Adds two numbers together
- * @param {number} a - First number
- * @param {number} b - Second number
- * @returns {number} The sum of a and b
- */
-function add(a, b) {
-    return a + b;
-}
-
-/**
- * Subtracts the second number from the first
- * @param {number} a - First number
- * @param {number} b - Second number to subtract from first
- * @returns {number} The difference between a and b
- */
-function subtract(a, b) {
-    return a - b;
-}
-
-/**
- * Multiplies two numbers
- * @param {number} a - First number
- * @param {number} b - Second number
- * @returns {number} The product of a and b
- */
-function multiply(a, b) {
-    return a * b;
-}
-
-/**
- * Divides the first number by the second
- * @param {number} a - Number to be divided (dividend)
- * @param {number} b - Number to divide by (divisor)
- * @returns {number} The quotient of a divided by b
- * @throws {Error} If trying to divide by zero
- */
-function divide(a, b) {
-    if (b === 0) {
-        throw new Error("Cannot divide by zero!");
-    }
-    return a / b;
-}
-
-/**
- * Performs a calculation based on the operator and two numbers
- * @param {string} operator - The mathematical operator (+, -, *, /)
- * @param {number} a - First number
- * @param {number} b - Second number
- * @returns {number} The result of the operation
- * @throws {Error} If an invalid operator is provided
- */
-function operate(operator, a, b) {
-    switch(operator) {
-        case '+':
-            return add(a, b);
-        case '-':
-            return subtract(a, b);
-        case '*':
-            return multiply(a, b);
-        case '/':
-            return divide(a, b);
-        default:
-            throw new Error('Invalid operator');
-    }
-} 
+}); 
