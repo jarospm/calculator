@@ -14,6 +14,14 @@ function divide(a, b) {
     return a / b;
 }
 
+// Add new square root function
+function squareRoot(a) {
+    if (a < 0) {
+        throw new Error("Invalid input");
+    }
+    return Math.sqrt(a);
+}
+
 /**
  * Main operation handler - converts operator symbols to actions
  */
@@ -23,6 +31,7 @@ function operate(operator, a, b) {
         case '-': return subtract(a, b);
         case '*': return multiply(a, b);
         case '/': return divide(a, b);
+        case '√': return squareRoot(a);  // Add square root case
         default: throw new Error('Invalid operator');
     }
 }
@@ -61,6 +70,22 @@ function inputDigit(digit) {
 
 function handleOperator(nextOperator) {
     const inputValue = parseFloat(displayValue);
+    
+    if (nextOperator === '√') {
+        // Handle square root immediately
+        try {
+            const result = operate('√', inputValue);
+            displayValue = String(result);
+            firstNumber = result;
+            justCompletedOperation = true;
+        } catch (error) {
+            displayValue = error.message;
+            firstNumber = null;
+            justCompletedOperation = true;
+        }
+        updateDisplay();
+        return;
+    }
     
     if (firstNumber === null) {
         // First number being entered
